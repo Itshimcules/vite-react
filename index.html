@@ -1,13 +1,160 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AGIEJOY • Private LLM (Agent Mode)</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <style>
+    :root {
+      --brand: #b5179e;
+      --brand-ink: #ffffff;
+      --bg: #faf7fb;
+      --ink: #1f1f1f;
+      --shell: #f2e9f7;
+      --accent: #5a189a;
+      --bubble-ai: #f8e6f2;
+      --bubble-user: #e7e7e7;
+      --success: #2a9d8f;
+      --warn: #e9c46a;
+      --error: #e76f51;
+      --muted: #777;
+      --ring: rgba(181,23,158,0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body, #root { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--ink);
+      background: radial-gradient(1200px 1200px at 100% -10%, #ffe1f7 0%, transparent 40%),
+                  radial-gradient(900px 900px at -10% 110%, #f5e0ff 0%, transparent 40%),
+                  var(--bg);
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      border: 1px solid #efe4f5;
+    }
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      background: var(--brand);
+      color: var(--brand-ink);
+      padding: 12px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .05s ease, box-shadow .2s ease;
+      box-shadow: 0 10px 18px -8px var(--ring);
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.secondary { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+    .btn.ghost { background: transparent; color: var(--brand); border: 1px dashed var(--brand); }
+    .input, .password {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e6d9ee;
+      border-radius: 12px;
+      background: #fff;
+      outline: none;
+    }
+    .login-wrap {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .login {
+      width: 100%;
+      max-width: 520px;
+      padding: 28px;
+      display: grid;
+      gap: 14px;
+    }
+    .brand { display: flex; gap: 12px; align-items: center; justify-content: center; }
+    .brand .logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      display: grid; place-items: center; color: #fff; font-weight: 800;
+    }
+    .muted { color: var(--muted); font-size: 0.95rem; }
+    .hint { font-size: 0.9rem; background: var(--shell); padding: 8px 12px; border-radius: 10px; }
+    .app { height: 100%; display: grid; grid-template-rows: auto 1fr; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: var(--brand); color: #fff;
+    }
+    .layout { display: grid; grid-template-columns: 280px 1fr 360px; gap: 16px; padding: 16px; height: 100%; }
+    .sidebar, .chat, .agent { padding: 14px; display: grid; gap: 12px; }
+    .chat { grid-template-rows: auto 1fr auto; }
+    .messages { overflow: auto; display: grid; gap: 10px; padding: 6px; }
+    .bubble { max-width: 72%; padding: 10px 12px; border-radius: 14px; }
+    .bubble.ai { background: var(--bubble-ai); }
+    .bubble.user { background: var(--bubble-user); justify-self: end; }
+    .composer { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .agent-log { overflow: auto; display: grid; gap: 8px; font-family: monospace; }
+    .logline { background: #fff; border-left: 4px solid #d3b3e4; padding: 8px 10px; border-radius: 8px; }
+    .pill { padding: 4px 8px; border-radius: 999px; font-size: 12px; background: #f0e6f7; color: #6b2fa3; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    // Mock tools
+    const tools = {
+      gmail_search: async () => ({ ok:true, source:"Gmail", info:["Thread with Carla: preorder shipping Monday."]}),
+      outlook_search: async () => ({ ok:true, source:"Outlook", info:["PO #AJO-2281 from Nova Retail."]}),
+      pdf_search: async () => ({ ok:true, source:"PDFs", info:["Marketing_Pitch.pdf → Sustainable fabrics pitch."]}),
+    };
+
+    function App(){ const [authed, setAuthed] = useState(false); return authed? <Workspace onLogout={()=>setAuthed(false)}/> : <Login onLogin={()=>setAuthed(true)}/>; }
+
+    function Login({ onLogin }) {
+      const [email,setEmail]=useState(""), [pw,setPw]=useState("");
+      return <div className="login-wrap"><div className="login card">
+        <div className="brand"><div className="logo">AJ</div><div><b>AGIEJOY • Private LLM</b></div></div>
+        <input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email"/>
+        <input className="password" type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="Password"/>
+        <button className="btn" onClick={()=> email==="demo@agiejoy.com"&&pw==="demo123"?onLogin():alert("Use demo@agiejoy.com / demo123")}>Sign In</button>
+      </div></div>;
+    }
+
+    function Workspace({onLogout}) {
+      const [messages,setMessages]=useState([{role:"assistant",text:"👋 Hi! Ask me about clients, orders, or pitches."}]);
+      const [input,setInput]=useState(""), [log,setLog]=useState([{k:"system",v:"Agent ready."}]);
+      const msgPaneRef=useRef(), logPaneRef=useRef();
+      useEffect(()=>{ msgPaneRef.current.scrollTop=msgPaneRef.current.scrollHeight; },[messages]);
+      useEffect(()=>{ logPaneRef.current.scrollTop=logPaneRef.current.scrollHeight; },[log]);
+
+      const handleSend=async()=> {
+        const q=input.trim(); if(!q) return;
+        setMessages(m=>[...m,{role:"user",text:q}]); setInput("");
+        setLog(l=>[...l,{k:"user",v:q}]);
+        const res=await tools.pdf_search(q); setLog(l=>[...l,{k:"tool",v:"pdf_search()"}]);
+        setMessages(m=>[...m,{role:"assistant",text:`Found: ${res.info.join(", ")}`}]);
+      };
+
+      return <div className="app">
+        <div className="topbar"><span>AGIEJOY Assistant</span><button className="btn ghost" onClick={onLogout}>Logout</button></div>
+        <div className="layout">
+          <div className="sidebar card"><b>Sources</b><div>Gmail, Outlook, PDFs (mock)</div></div>
+          <div className="chat card">
+            <div className="messages" ref={msgPaneRef}>{messages.map((m,i)=><div key={i} className={`bubble ${m.role==="user"?"user":"ai"}`}>{m.text}</div>)}</div>
+            <div className="composer"><input className="input" value={input} onChange={e=>setInput(e.target.value)} placeholder="Ask something..." onKeyDown={e=>e.key==="Enter"&&handleSend()}/><button className="btn" onClick={handleSend}>Send</button></div>
+          </div>
+          <div className="agent card"><b>Agent Log</b><div className="agent-log" ref={logPaneRef}>{log.map((r,i)=><div key={i} className="logline"><span>{r.k}</span>: {r.v}</div>)}</div></div>
+        </div>
+      </div>;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
 </html>
