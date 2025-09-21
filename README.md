@@ -1,21 +1,22 @@
-# React + TypeScript + Vite
+AGIEJOY • Private LLM Assistant (Agent Mode Demo)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a front-end demo UI simulating what a private, company-specific Large Language Model (LLM) interface might look like for an internal knowledge assistant.
+It was designed for AGIEJOY LLC, a modern feminist clothing brand, as a concept prototype.
 
-While this project uses React, Vite supports many popular JS frameworks. [See all the supported frameworks](https://vitejs.dev/guide/#scaffolding-your-first-vite-project).
+Features
 
-## Deploy Your Own
+Simulated Login — demo credentials to illustrate secure access.
 
-Deploy your own Vite project with Vercel.
+Conversational Chat Interface — chat with a bot that responds with mocked knowledge retrieval.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/examples/tree/main/framework-boilerplates/vite-react&template=vite-react)
+Agent Mode Transparency — right-hand panel logs tool calls (gmail_search, outlook_search, pdf_search) and their observations.
 
-_Live Example: https://vite-react-example.vercel.app_
+Connectors Simulation — toggle Gmail, Outlook, and PDF sources to see how the assistant routes queries differently.
 
-### Deploying From Your Terminal
+Branded UI — styled in AGIEJOY’s modern feminist aesthetic.
 
-You can deploy your new Vite project with a single command from your terminal using [Vercel CLI](https://vercel.com/download):
+Front-end Only — no backend required; runs entirely in the browser.
 
-```shell
-$ vercel
-```
+Live Demo
+
+View the live demo on Vercel
